@@ -1,3 +1,4 @@
+import { api } from "@/plugins/api";
 import ArtistIcon from "@/components/icons/ArtistIcon.vue";
 import GenreIcon from "@/components/icons/GenreIcon.vue";
 import { setUserPreference } from "@/composables/userPreferences";
@@ -81,6 +82,18 @@ interface MenuItemDefinition {
 
 // Registry order is the default menu order.
 const MENU_ITEM_REGISTRY: MenuItemDefinition[] = [
+  {
+    id: "mlm-requests",
+    label: "Search & request",
+    icon: Search,
+    path: "/mlm-requests",
+    isLibraryNode: false,
+    group: "explore",
+    available: () =>
+      Object.values(api.providers).some(
+        (p) => p.domain === "mlm" && p.available,
+      ),
+  },
   {
     id: "discover",
     label: "discover",

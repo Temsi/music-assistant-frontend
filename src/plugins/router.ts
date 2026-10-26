@@ -148,6 +148,11 @@ export const routes: RouteRecordRaw[] = [
         redirect: "/discover",
       },
       {
+        path: "/mlm-requests",
+        name: "mlm-requests",
+        component: () => import("@/views/MLMRequests.vue"),
+      },
+      {
         path: "/discover",
         name: "discover",
         component: () =>

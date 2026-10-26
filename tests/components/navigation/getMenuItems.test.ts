@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MicVocal } from "@lucide/vue";
 
-const { storeMock, mockSetUserPreference } = vi.hoisted(() => ({
+const { storeMock, mockSetUserPreference, providersMock } = vi.hoisted(() => ({
+  providersMock: {} as Record<string, { domain: string; available: boolean }>,
   storeMock: {
     currentUser: null as { preferences?: Record<string, unknown> } | null,
     enabledPlugins: new Set<string>(),
@@ -10,6 +11,8 @@ const { storeMock, mockSetUserPreference } = vi.hoisted(() => ({
   },
   mockSetUserPreference: vi.fn(),
 }));
+
+vi.mock("@/plugins/api", () => ({ api: { providers: providersMock } }));
 
 vi.mock("@/plugins/store", () => ({
   store: storeMock,
@@ -52,6 +55,7 @@ function lastWrittenConfig(): MenuConfig {
 
 describe("getMenuItems (sidebar.menu preference)", () => {
   beforeEach(() => {
+    Object.keys(providersMock).forEach((key) => delete providersMock[key]);
     mockSetUserPreference.mockReset();
     mockSetUserPreference.mockImplementation(
       async (key: string, value: unknown) => {
@@ -78,11 +82,21 @@ describe("getMenuItems (sidebar.menu preference)", () => {
       "milkdrop_visualizer",
     ]);
 
-    expect(getIds()).toEqual(DEFAULT_MENU_ITEMS);
+    expect(getIds()).toEqual(
+      DEFAULT_MENU_ITEMS.filter((id) => id !== "mlm-requests"),
+    );
     expect(getMenuItems().filter((item) => item.hidden)).toEqual([]);
     expect(getMenuItems().find((item) => item.id === "music_quiz")?.icon).toBe(
       MicVocal,
     );
+  });
+
+  it("shows Search & request only with an available MLM provider", () => {
+    expect(getIds()).not.toContain("mlm-requests");
+    providersMock.mlm_one = { domain: "mlm", available: true };
+    expect(getIds()).toContain("mlm-requests");
+    providersMock.mlm_one.available = false;
+    expect(getIds()).not.toContain("mlm-requests");
   });
 
   it("groups the plugin-backed entries under the plugins section", () => {
